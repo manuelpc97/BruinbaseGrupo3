@@ -18,6 +18,8 @@
  */
 class BTLeafNode {
   public:
+
+    BTLeafNode();
    /**
     * Insert the (key, rid) pair to the node.
     * Remember that all keys inside a B+tree node should be kept sorted.
@@ -82,6 +84,8 @@ class BTLeafNode {
     */
     int getKeyCount();
  
+    int getMaxKeys();
+ 
    /**
     * Read the content of the node from the page pid in the PageFile pf.
     * @param pid[IN] the PageId to read
@@ -98,6 +102,12 @@ class BTLeafNode {
     */
     RC write(PageId pid, PageFile& pf);
 
+    void print();
+    char* getBuffer()
+    {
+        return buffer;
+    }
+
   private:
    /**
     * The main memory buffer for loading the content of the disk page 
@@ -112,6 +122,8 @@ class BTLeafNode {
  */
 class BTNonLeafNode {
   public:
+
+    BTNonLeafNode();
    /**
     * Insert a (key, pid) pair to the node.
     * Remember that all keys inside a B+tree node should be kept sorted.
@@ -160,6 +172,10 @@ class BTNonLeafNode {
     */
     int getKeyCount();
 
+    int getMaxKeys();
+
+
+    RC locate(int searchKey, int& eid);
    /**
     * Read the content of the node from the page pid in the PageFile pf.
     * @param pid[IN] the PageId to read
@@ -176,6 +192,12 @@ class BTNonLeafNode {
     */
     RC write(PageId pid, PageFile& pf);
 
+
+    char* getBuffer()
+    {
+        return buffer;
+    }
+    void print();
   private:
    /**
     * The main memory buffer for loading the content of the disk page 

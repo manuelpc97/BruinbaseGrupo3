@@ -14,6 +14,7 @@
 #include <fstream>
 #include "Bruinbase.h"
 #include "SqlEngine.h"
+#include "BTreeIndex.h"
 
 using namespace std;
 
@@ -132,7 +133,72 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 {
-  /* your code here */
+  string tableName = table + ".tbl";
+  string treeName = table + ".idx";
+  RC rc;
+  RecordFile recordFile; 
+  RecordId rID; 
+
+  fstream fs; 
+  int key;
+  string value;
+  string line;
+  BTreeIndex btree;
+
+  fs.open(loadfile.c_str(), fstream::in);
+
+  if (!fs.is_open()){
+    cout << "No se puedo abrir " << loadfile.c_str() << endl;
+  }
+
+  if(recordFile.open(tableName, 'w')){
+    return RC_FILE_OPEN_FAILED;
+  }
+
+  if (index){ 
+    rc = recordFile.append(key, value, rID);
+    int iterator=0;
+    rc=btree.open(treeName,'w');
+    if(!rc){
+      int iterator=0;
+
+      while(getline(fs,line)){
+        rc=parseLoadLine(line,key,value);
+        if(rc)
+          break;
+
+        rc=recordFile.append(key,value,rID);
+        if(rc)
+          break;
+
+        rc=btree.insert(key,rID);
+        if(rc)
+          break;
+      }
+      btree.close();
+    }
+  }else{ 
+    while(!fs.eof()){
+      getline(fs, line);
+      rc = parseLoadLine(line, key, value);
+      if (rc){
+        break;
+      }
+      rc = recordFile.append(key, value, rID);
+      if (rc){
+        break;
+      }
+    }
+  }
+
+  fs.close();
+
+  if (recordFile.close()){
+    return RC_FILE_CLOSE_FAILED;
+  }
+
+  //retorna 0 si se hace apropiadamente, sino retorna errorcode.
+  return rc;
 
   return 0;
 }

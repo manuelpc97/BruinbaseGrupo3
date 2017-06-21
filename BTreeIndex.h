@@ -88,6 +88,12 @@ class BTreeIndex {
    */
   RC readForward(IndexCursor& cursor, int& key, RecordId& rid);
   
+  RC insertRecursively(int key, const RecordId& rid, int currHeight, PageId pid, int& pKey, PageId& pPid);
+  RC locateRecursively(int searchKey, PageId& pid, PageId& eid, int currHeight);
+  void print();
+  void printRecNL(PageId pid,int heightLevel);
+  void printLeaf(PageId pid);
+  
  private:
   PageFile pf;         /// the PageFile used to store the actual b+tree in disk
 

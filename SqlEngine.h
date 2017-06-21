@@ -11,8 +11,11 @@
 #define SQLENGINE_H
 
 #include <vector>
+#include <cstring>
+#include <cstdio>
 #include "Bruinbase.h"
 #include "RecordFile.h"
+#include "BTreeIndex.h"
 
 /**
  * data structure to represent a condition in the WHERE clause
@@ -67,6 +70,7 @@ class SqlEngine {
    * @return error code. 0 if no error
    */
   static RC parseLoadLine(const std::string& line, int& key, std::string& value);
+  static RC showOutput(int attr, int key, std::string value);
 };
 
 #endif /* SQLENGINE_H */

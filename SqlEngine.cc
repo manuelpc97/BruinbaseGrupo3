@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <climits>
 #include "Bruinbase.h"
 #include "SqlEngine.h"
 #include "BTreeIndex.h"
@@ -37,14 +38,17 @@ RC SqlEngine::run(FILE* commandline)
 
 RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 {
+  cout << "Entro a select" << endl;
   RecordFile rf;   // RecordFile containing the table
   RecordId   rid;  // record cursor for table scanning
-
+  BTreeIndex btree;
   RC     rc;
   int    key;     
   string value;
   int    count;
   int    diff;
+  bool shouldPrint;
+
 
   // open the table file
   if ((rc = rf.open(table + ".tbl", 'r')) < 0) {
@@ -61,39 +65,53 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
       fprintf(stderr, "Error: while reading a tuple from table %s\n", table.c_str());
       goto exit_select;
     }
-
+    shouldPrint = true;
     // check the conditions on the tuple
     for (unsigned i = 0; i < cond.size(); i++) {
       // compute the difference between the tuple value and the condition value
       switch (cond[i].attr) {
-      case 1:
-	diff = key - atoi(cond[i].value);
-	break;
-      case 2:
-	diff = strcmp(value.c_str(), cond[i].value);
-	break;
+        case 1:
+	       diff = key - atoi(cond[i].value);
+	     break;
+        case 2:
+	       diff = strcmp(value.c_str(), cond[i].value);
+	       break;
       }
 
       // skip the tuple if any condition is not met
-      switch (cond[i].comp) {
-      case SelCond::EQ:
-	if (diff != 0) goto next_tuple;
-	break;
-      case SelCond::NE:
-	if (diff == 0) goto next_tuple;
-	break;
-      case SelCond::GT:
-	if (diff <= 0) goto next_tuple;
-	break;
-      case SelCond::LT:
-	if (diff >= 0) goto next_tuple;
-	break;
-      case SelCond::GE:
-	if (diff < 0) goto next_tuple;
-	break;
-      case SelCond::LE:
-	if (diff > 0) goto next_tuple;
-	break;
+      cout << "Key: " << diff << endl;
+      switch (cond[i].comp) {       
+        case SelCond::EQ:
+          if(diff != 0){
+            shouldPrint = false;
+          }
+        break;
+        case SelCond::NE:
+        if(diff == 0){
+          shouldPrint = false;
+        }
+        break;
+        case SelCond::GT:
+        if(diff <= 0){
+          shouldPrint = false;
+        }
+        break;
+        case SelCond::LT:
+        if(diff >= 0){
+          shouldPrint = false;
+        }
+        break;
+        case SelCond::GE:
+          if(diff < 0){
+            shouldPrint = false;
+          }
+        break;
+        case SelCond::LE:
+          if(diff > 0){
+              shouldPrint = false;
+          }
+        break;
+
       }
     }
 
@@ -102,20 +120,10 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
     count++;
 
     // print the tuple 
-    switch (attr) {
-    case 1:  // SELECT key
-      fprintf(stdout, "%d\n", key);
-      break;
-    case 2:  // SELECT value
-      fprintf(stdout, "%s\n", value.c_str());
-      break;
-    case 3:  // SELECT *
-      fprintf(stdout, "%d '%s'\n", key, value.c_str());
-      break;
+    if(shouldPrint){
+      showOutput(attr,key,value);
     }
 
-    // move to the next tuple
-    next_tuple:
     ++rid;
   }
 
@@ -130,6 +138,8 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
   rf.close();
   return rc;
 }
+
+
 
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 {
@@ -243,3 +253,16 @@ RC SqlEngine::parseLoadLine(const string& line, int& key, string& value)
 
     return 0;
 }
+
+
+RC SqlEngine::showOutput(int attr, int key, string value){
+  if(attr == 1){
+    cout << key << endl;
+  }else if(attr == 2){
+    cout << value.c_str() << endl;
+  }else if(attr == 3){
+    cout << key << " , " << value.c_str() << endl;
+  }
+  return 0;
+}
+
